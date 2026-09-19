@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import './App.css';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const SUGGESTIONS = [
   'Explain binary search with an example',
   'What is the difference between a stack and a queue?',
@@ -32,7 +34,7 @@ export default function App() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch('${API_URL}/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question, history }),
