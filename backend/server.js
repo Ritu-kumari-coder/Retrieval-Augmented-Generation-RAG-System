@@ -15,7 +15,7 @@ app.use(express.json());
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const embeddings = new GoogleGenerativeAIEmbeddings({
   apiKey: process.env.GEMINI_API_KEY,
-  model: 'text-embedding-004',
+  model: 'gemini-embedding-2-preview',
 });
 const pinecone = new Pinecone();
 const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME);
@@ -29,7 +29,7 @@ async function transformQuery(question, history) {
   if (history.length === 0) return question;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-3.6-flash',
     contents: [...toContents(history), { role: 'user', parts: [{ text: question }] }],
     config: {
       systemInstruction: `You are a query rewriting expert. Based on the provided chat history, rephrase the "Follow Up user Question" into a complete, standalone question that can be understood without the chat history.
@@ -55,7 +55,7 @@ async function answer(question, history) {
     .join('\n\n---\n\n');
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-3.6-flash',
     contents: [...toContents(history), { role: 'user', parts: [{ text: query }] }],
     config: {
       systemInstruction: `You have to behave like a Data Structure and Algorithm Expert.
