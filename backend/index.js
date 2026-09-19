@@ -9,7 +9,7 @@ import { PineconeStore } from '@langchain/pinecone';
 
 async function indexDocument() {
     /*loading pdf*/
-    const PDF_PATH = './cse-module.pdf';
+    const PDF_PATH = './dsa.pdf';
     
     const pdfLoader = new PDFLoader(PDF_PATH, {
         // Updated to use the correct v4+ modern import
@@ -53,7 +53,7 @@ async function indexDocument() {
     console.log("Pinecone configured...");
 
     /*Langchain takes chunks, embed in vector as per embedding model provided and store it in database providded*/
-    await PineconeStore.fromDocuments(chunkedDocs, embeddings, {
+    await PineconeStore.fromDocuments(validDocs, embeddings, {
         pineconeIndex,
         maxConcurrency: 5,
     });
