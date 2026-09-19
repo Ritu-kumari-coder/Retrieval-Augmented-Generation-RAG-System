@@ -1,6 +1,8 @@
 # Retrieval-Augmented Generation (RAG) System
 
-A document question-answering system built using **LangChain**, **Google Gemini**, and **Pinecone**. The application enables users to ask natural language questions about PDF documents and receive context-aware answers generated using Retrieval-Augmented Generation (RAG).
+A document question-answering system built using **LangChain**, **Google Gemini**, and **Pinecone**. The application enables users to ask natural language questions about PDF documents and receive context-aware answers generated using Retrieval-Augmented Generation (RAG). It includes a **React chat interface** backed by an **Express API**.
+
+<!-- Add a screenshot here: ![Chat UI](docs/screenshot.png) -->
 
 ## Features
 
@@ -13,6 +15,8 @@ A document question-answering system built using **LangChain**, **Google Gemini*
 * Conversational memory support
 * Query rewriting for follow-up questions
 * Hallucination reduction through retrieval-based grounding
+* React chat interface with markdown and code rendering
+* Express REST API connecting the frontend to the RAG pipeline
 
 ---
 
@@ -46,6 +50,15 @@ Gemini LLM
 Generated Answer
 ```
 
+### Application Flow
+
+```text
+React Frontend  ──POST /api/chat──▶  Express Server  ──▶  RAG Pipeline
+ (Vite, :5173)                        (Node, :3000)        (Query rewrite → Pinecone → Gemini)
+       ▲                                                          │
+       └──────────────────── JSON answer ◀────────────────────────┘
+```
+
 ## Tech Stack
 
 * Node.js
@@ -54,21 +67,36 @@ Generated Answer
 * Pinecone Vector Database
 * PDF.js
 * JavaScript (ES Modules)
+* Express (REST API)
+* React + Vite (frontend)
+* react-markdown (answer formatting)
 
 ---
 
 ## Project Structure
 
 ```text
-RAG/
+Retrieval-Augmented-Generation-RAG-System/
 │
-├── index.js               # PDF ingestion and vector indexing
-├── query.js               # Query processing and retrieval pipeline
-├── cse-module.pdf         # Sample document
-├── dsa.pdf                # Sample document
-├── RAG System.html        # Frontend interface
-├── package.json
-├── .env
+├── backend/
+│   ├── index.js           # PDF ingestion and vector indexing
+│   ├── server.js          # Express API and retrieval pipeline
+│   ├── cse-module.pdf     # Sample document
+│   ├── dsa.pdf            # Sample document
+│   ├── package.json
+│   ├── .env               # API keys (not committed)
+│   └── .env.example       # Template for required variables
+│
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx        # Chat interface
+│   │   ├── App.css        # Styling
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── vite.config.js     # Dev proxy to the API
+│   └── package.json
+│
+├── .gitignore
 └── README.md
 ```
 
@@ -94,8 +122,10 @@ chunkOverlap: 200
 Each chunk is converted into a vector embedding using Google's embedding model.
 
 ```javascript
-text-embedding-004
+gemini-embedding-2-preview
 ```
+
+The Pinecone index must be created with dimension `3072` and the `cosine` metric to match this model.
 
 ### Step 4: Vector Storage
 
@@ -115,11 +145,41 @@ The most relevant chunks are retrieved.
 
 Retrieved context is provided to Gemini, which generates an answer grounded in the document content.
 
+### Step 7: Web Interface
+
+The React frontend sends each question, along with the previous conversation, to the Express server. The server rewrites follow-up questions into standalone queries, runs the retrieval pipeline, and returns the answer, which the frontend renders with markdown and code formatting.
+
+---
+
+## API
+
+### `POST /api/chat`
+
+Request body:
+
+```json
+{
+  "question": "What is Binary Search?",
+  "history": [
+    { "role": "user", "text": "What is a sorted array?" },
+    { "role": "model", "text": "A sorted array is..." }
+  ]
+}
+```
+
+Response:
+
+```json
+{ "answer": "Binary search is..." }
+```
+
+`history` is optional and can be omitted for the first question.
+
 ---
 
 ## Environment Variables
 
-Create a `.env` file:
+Create a `backend/.env` file:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key
@@ -135,12 +195,20 @@ Clone the repository:
 
 ```bash
 git clone https://github.com/Ritu-kumari-coder/Retrieval-Augmented-Generation-RAG-System
-cd RAG
+cd Retrieval-Augmented-Generation-RAG-System
 ```
 
-Install dependencies:
+Install backend dependencies:
 
 ```bash
+cd backend
+npm install
+```
+
+Install frontend dependencies:
+
+```bash
+cd ../frontend
 npm install
 ```
 
@@ -151,6 +219,7 @@ npm install
 Run:
 
 ```bash
+cd backend
 node index.js
 ```
 
@@ -161,23 +230,31 @@ This will:
 * Generate embeddings
 * Store vectors in Pinecone
 
+Run this once per document. Running it again adds duplicate chunks unless the index is cleared first.
+
 ---
 
-## Start Chat Interface
+## Start the Application
 
-Run:
+The backend and frontend run in two separate terminals.
+
+**Terminal 1: API server**
 
 ```bash
-node query.js
+cd backend
+node server.js
 ```
 
-Ask questions directly from the terminal.
+The API starts on `http://localhost:3000`.
 
-Example:
+**Terminal 2: React frontend**
 
-```text
-Ask me anything --> What is Binary Search?
+```bash
+cd frontend
+npm run dev
 ```
+
+Open the URL printed by Vite (usually `http://localhost:5173`) and start asking questions.
 
 ---
 
@@ -199,11 +276,9 @@ What are graph traversal algorithms?
 
 * Source citation support
 * Multi-document filtering
-* Web-based chat interface
 * User authentication
 * Chat history persistence
 * Response streaming
-* Deployment using Vercel/Render
 * Evaluation metrics for retrieval quality
 
 ---
@@ -221,9 +296,7 @@ Through this project, I gained practical experience with:
 * LangChain Workflows
 * Pinecone Integration
 * Large Language Model Applications
+* Building a REST API with Express
+* Building a React chat interface that consumes it
 
 ---
-
-## Author
-
-Developed as a learning project to explore Retrieval-Augmented Generation, vector search, and document-grounded AI applications.
